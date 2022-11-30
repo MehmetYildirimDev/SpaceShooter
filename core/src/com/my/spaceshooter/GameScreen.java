@@ -17,11 +17,12 @@ class GameScreen implements Screen {
 
     //graphich
     private SpriteBatch batch;//haraketli grafik
-    private Texture background;
-
+//    private Texture background;
+    private  Texture[] backgrounds;
     //timing
-    private  int backgroundOffset;//zamanla degisim icin. Cunku haraket edicek
-
+//    private  int backgroundOffset;//zamanla degisim icin. Cunku haraket edicek
+    private float[] backgroundOffsets = {0,0,0,0};
+    private float backgroundMaxScrollingSpeed;
     //world parameters
     private final int WORLD_WIDTH = 72;
     private final int WORLD_HEIGHT = 128;
@@ -31,8 +32,17 @@ class GameScreen implements Screen {
         camera = new OrthographicCamera();//2d kameralar ortagrafik olur persfektif degil
         viewport = new StretchViewport(WORLD_WIDTH,WORLD_HEIGHT,camera);//esnek goruntu alani
 
-        background = new Texture("darkPurpleStarscape.png");
-        backgroundOffset = 0;
+//        background = new Texture("darkPurpleStarscape.png");
+//        backgroundOffset = 0;
+
+        backgrounds = new Texture[4];
+        backgrounds[0] = new Texture("Starscape00.png");
+        backgrounds[1] = new Texture("Starscape01.png");
+        backgrounds[2] = new Texture("Starscape02.png");
+        backgrounds[3] = new Texture("Starscape03.png");
+
+        backgroundMaxScrollingSpeed = (float)(WORLD_HEIGHT) / 4;
+
 
         batch = new SpriteBatch();//goruntuyu olusturur
     }
@@ -44,16 +54,25 @@ class GameScreen implements Screen {
         batch.begin();
 
         //scrolling background
-        backgroundOffset++;
-        if (backgroundOffset % WORLD_HEIGHT ==0)
-            backgroundOffset = 0;
-
-
-        batch.draw(background,0,-backgroundOffset,WORLD_WIDTH,WORLD_HEIGHT);//arka plani ciziyo
-        batch.draw(background,0,-backgroundOffset+WORLD_HEIGHT,WORLD_WIDTH,WORLD_HEIGHT);//arkaplanlar uctan uca kayarak
-
+        renderBackground(deltaTime);
 
         batch.end();
+    }
+
+    private void renderBackground(float deltaTime) {
+//bazi bgler daha yavas ilerliyor daha guzel bir manzara icin
+        backgroundOffsets[0] +=deltaTime * backgroundMaxScrollingSpeed/8;
+        backgroundOffsets[1] +=deltaTime * backgroundMaxScrollingSpeed/4;
+        backgroundOffsets[2] +=deltaTime * backgroundMaxScrollingSpeed/2;
+        backgroundOffsets[3] +=deltaTime * backgroundMaxScrollingSpeed;
+    for (int layer = 0; layer <backgroundOffsets.length; layer++){
+        if (backgroundOffsets[layer] > WORLD_HEIGHT){
+            backgroundOffsets[layer] = 0;
+        }
+        batch.draw(backgrounds[layer], 0,-backgroundOffsets[layer], WORLD_WIDTH,WORLD_HEIGHT);
+        batch.draw(backgrounds[layer], 0,-backgroundOffsets[layer]+WORLD_HEIGHT, WORLD_WIDTH,WORLD_HEIGHT);
+    }
+
     }
 
     @Override
