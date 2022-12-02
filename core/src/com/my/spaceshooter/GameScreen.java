@@ -73,7 +73,7 @@ class GameScreen implements Screen {
         enemyLaserTextureRegion= textureAtlas.findRegion("laserRed03");
 
         //set up game objects//yatay olarak ekranin ortasi ve dikey olarak 3. ceyregin bitisinde
-        //set up game objects
+        //set up game objects //tum bilgiler burada gonderiliyor
         playerShip = new PlayerShip(WORLD_WIDTH / 2, WORLD_HEIGHT / 4,
                 10, 10,
                 2, 3,
@@ -111,6 +111,45 @@ class GameScreen implements Screen {
         playerShip.draw(batch);
 
         //lasers
+        renderLasers(deltaTime);
+
+        //detect collisions between lasers and ships
+        detectCollisions();
+
+        //explosions
+        renderExplosions(deltaTime);//patlamalar
+
+        batch.end();
+    }
+
+    private void detectCollisions() {
+        //for each player laser, check whether it intersects an enemy ship
+        ListIterator<Laser> iterator = playerLaserList.listIterator();
+        while (iterator.hasNext()) {
+            Laser laser = iterator.next();
+            if (enemyShip.intersects(laser.getBoundingBox())) {
+                //contact with enemy ship
+                enemyShip.hit(laser);
+                iterator.remove();//carpisma oldugu icin laseri kaldiriyoruz
+            }
+        }
+        //for each enemy laser, check whether it intersects the player ship
+        iterator = enemyLaserList.listIterator();
+        while (iterator.hasNext()) {
+            Laser laser = iterator.next();
+            if (playerShip.intersects(laser.getBoundingBox())) {
+                //contact with player ship
+                playerShip.hit(laser);
+                iterator.remove();
+            }
+        }
+    }
+
+    private void renderExplosions(float deltaTime) {
+        
+    }
+
+    private void renderLasers(float deltaTime) {
         //create new lasers
         //player lasers
         if (playerShip.canFireLaser()) {
@@ -148,7 +187,6 @@ class GameScreen implements Screen {
             }
 
         }
-        batch.end();
     }
 
     private void renderBackground(float deltaTime) {

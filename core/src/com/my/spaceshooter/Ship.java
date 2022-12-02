@@ -2,6 +2,7 @@ package com.my.spaceshooter;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 
 abstract class Ship {
     //ship characteristics //Gemi ozellikleri
@@ -11,6 +12,7 @@ abstract class Ship {
     //position & dimension
     float xPosition, yPosition; //lower-left corner
     float width, height;
+    Rectangle boundingBox;
 
     //graphics
     TextureRegion shipTextureRegion, shieldTextureRegion, laserTextureRegion;
@@ -30,11 +32,14 @@ abstract class Ship {
                 TextureRegion laserTextureRegion) {
         this.movementSpeed = movementSpeed;
         this.shield = shield;
+
         this.xPosition = xCentre - width / 2;
         this.yPosition = yCentre - height / 2;
         this.width = width;
         this.height = height;
         this.laserWidth = laserWidth;
+        this.boundingBox = new Rectangle(xPosition,yPosition,width,height);
+
         this.laserHeight = laserHeight;
         this.laserMovementSpeed = laserMovementSpeed;
         this.timeBetweenShots = timeBetweenShots;
@@ -44,6 +49,7 @@ abstract class Ship {
     }
 
     public void update(float deltaTime) {
+        boundingBox.set(xPosition,yPosition,width,height);//hitboxu guncelliyor
         timeSinceLastShot += deltaTime;
     }
 
@@ -53,9 +59,19 @@ abstract class Ship {
 
     public abstract Laser[] fireLasers();
 
+    public boolean intersects(Rectangle otherRectangle) {
+        return boundingBox.overlaps(otherRectangle);
+    }//carpism
+
+    public void hit(Laser laser) {
+        if (shield > 0) {
+            shield--;
+        }
+    }
+
     public void draw(Batch batch) {//cizdiriyoruz
         batch.draw(shipTextureRegion, xPosition, yPosition, width, height);
-        if (shield > 0) {
+        if (shield > 0) {//kirilinca gozukmeyecek
             batch.draw(shieldTextureRegion, xPosition, yPosition, width, height);
         }
     }
