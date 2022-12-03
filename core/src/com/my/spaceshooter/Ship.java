@@ -10,8 +10,6 @@ abstract class Ship {
     int shield;//kalkan
 
     //position & dimension
-    float xPosition, yPosition; //lower-left corner
-    float width, height;
     Rectangle boundingBox;
 
     //graphics
@@ -33,12 +31,8 @@ abstract class Ship {
         this.movementSpeed = movementSpeed;
         this.shield = shield;
 
-        this.xPosition = xCentre - width / 2;
-        this.yPosition = yCentre - height / 2;
-        this.width = width;
-        this.height = height;
         this.laserWidth = laserWidth;
-        this.boundingBox = new Rectangle(xPosition,yPosition,width,height);
+        this.boundingBox = new Rectangle(xCentre - width / 2,yCentre - height / 2,width,height);
 
         this.laserHeight = laserHeight;
         this.laserMovementSpeed = laserMovementSpeed;
@@ -49,7 +43,6 @@ abstract class Ship {
     }
 
     public void update(float deltaTime) {
-        boundingBox.set(xPosition,yPosition,width,height);//hitboxu guncelliyor
         timeSinceLastShot += deltaTime;
     }
 
@@ -61,7 +54,7 @@ abstract class Ship {
 
     public boolean intersects(Rectangle otherRectangle) {
         return boundingBox.overlaps(otherRectangle);
-    }//carpism
+    }//carpisma kontrolu
 
     public void hit(Laser laser) {
         if (shield > 0) {
@@ -70,9 +63,9 @@ abstract class Ship {
     }
 
     public void draw(Batch batch) {//cizdiriyoruz
-        batch.draw(shipTextureRegion, xPosition, yPosition, width, height);
+        batch.draw(shipTextureRegion,boundingBox.x,boundingBox.y,boundingBox.width,boundingBox.height);
         if (shield > 0) {//kirilinca gozukmeyecek
-            batch.draw(shieldTextureRegion, xPosition, yPosition, width, height);
+            batch.draw(shieldTextureRegion, boundingBox.x,boundingBox.y,boundingBox.width,boundingBox.height);
         }
     }
 

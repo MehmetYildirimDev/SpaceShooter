@@ -18,10 +18,10 @@ class PlayerShip extends Ship{
     @Override
     public Laser[] fireLasers() {
         Laser[] laser = new Laser[2];
-        laser[0] = new Laser(xPosition + width * 0.07f, yPosition + height * 0.45f,
+        laser[0] = new Laser(boundingBox.x + boundingBox.width * 0.07f, boundingBox.y +boundingBox.height * 0.45f,
                 laserWidth, laserHeight,
                 laserMovementSpeed, laserTextureRegion);
-        laser[1] = new Laser(xPosition + width * 0.93f, yPosition + height * 0.45f,
+        laser[1] = new Laser(boundingBox.x + boundingBox.width * 0.93f, boundingBox.y + boundingBox.height * 0.45f,
                 laserWidth, laserHeight,
                 laserMovementSpeed, laserTextureRegion);
 
