@@ -62,6 +62,10 @@ abstract class Ship {
         }
     }
 
+    public void translate(float xChange, float yChange) {
+        boundingBox.setPosition(boundingBox.x+xChange, boundingBox.y+yChange);
+    }
+
     public void draw(Batch batch) {//cizdiriyoruz
         batch.draw(shipTextureRegion,boundingBox.x,boundingBox.y,boundingBox.width,boundingBox.height);
         if (shield > 0) {//kirilinca gozukmeyecek
