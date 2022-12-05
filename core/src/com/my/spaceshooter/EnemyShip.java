@@ -3,8 +3,13 @@ package com.my.spaceshooter;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 
 class EnemyShip extends Ship {
+
+    Vector2 directionVector;
+    float timeSinceLastDirectionChange = 0;
+    float directionChangeFrequency = 0.75f;
 
     public EnemyShip(float xCentre, float yCentre,
                      float width, float height,
@@ -15,6 +20,8 @@ class EnemyShip extends Ship {
                      TextureRegion shieldTextureRegion,
                      TextureRegion laserTextureRegion) {
         super(xCentre, yCentre, width, height, movementSpeed, shield, laserWidth, laserHeight, laserMovementSpeed, timeBetweenShots, shipTextureRegion, shieldTextureRegion, laserTextureRegion);
+
+        directionVector = new Vector2(0, -1);
     }
 
     @Override
@@ -30,6 +37,26 @@ class EnemyShip extends Ship {
         timeSinceLastShot = 0;
 
         return laser;
+    }
+
+    public Vector2 getDirectionVector() {
+        return directionVector;
+    }
+
+    private void randomizeDirectionVector() {
+        double bearing = SpaceShooterGame.random.nextDouble()*6.283185; //0 to 2*PI
+        directionVector.x = (float)Math.sin(bearing);
+        directionVector.y = (float)Math.cos(bearing);
+    }
+
+    @Override
+    public void update(float deltaTime) {
+        super.update(deltaTime);
+        timeSinceLastDirectionChange += deltaTime;
+        if (timeSinceLastDirectionChange > directionChangeFrequency) {
+            randomizeDirectionVector();
+            timeSinceLastDirectionChange -= directionChangeFrequency;
+        }
     }
 
     @Override
