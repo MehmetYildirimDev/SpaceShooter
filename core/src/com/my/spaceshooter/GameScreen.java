@@ -5,14 +5,15 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
@@ -25,6 +26,8 @@ class GameScreen implements Screen {
     //graphich
     private SpriteBatch batch;//haraketli grafik
     private TextureAtlas textureAtlas;
+    private Texture explosionTexture;
+
     private TextureRegion[] backgrounds;
     private float backgroundHeight;
 
@@ -35,7 +38,7 @@ class GameScreen implements Screen {
     //timing
     private float[] backgroundOffsets = {0,0,0,0};//zamanla degisim icin. Cunku haraket edicek
     private float backgroundMaxScrollingSpeed;
-    private float timeBetweenEnemySpawns = 3f;
+    private float timeBetweenEnemySpawns = 1f;
     private float enemySpawnTimer = 0;
 
 
@@ -49,6 +52,7 @@ class GameScreen implements Screen {
     private LinkedList<EnemyShip> enemyShipList;
     private LinkedList<Laser> playerLaserList;
     private LinkedList<Laser> enemyLaserList;
+    private LinkedList<Explosion> explosionList;
         //linkedList neden => kolayca silme islemi icin. Cunku gemiye carpinca kolayca silmememiz gerek
 
 
@@ -80,6 +84,9 @@ class GameScreen implements Screen {
         playerLaserTextureRegion= textureAtlas.findRegion("laserBlue03");
         enemyLaserTextureRegion= textureAtlas.findRegion("laserRed03");
 
+        explosionTexture  = new Texture("explosion.png");
+
+
         //set up game objects//yatay olarak ekranin ortasi ve dikey olarak 3. ceyregin bitisinde
         //set up game objects //tum bilgiler burada gonderiliyor
         playerShip = new PlayerShip(WORLD_WIDTH / 2, WORLD_HEIGHT / 4,
@@ -94,6 +101,8 @@ class GameScreen implements Screen {
 
         playerLaserList = new LinkedList<>();
         enemyLaserList = new LinkedList<>();
+
+        explosionList = new LinkedList<>();
 
         batch = new SpriteBatch();//goruntuyu olusturur
     }
@@ -131,7 +140,8 @@ class GameScreen implements Screen {
         detectCollisions();
 
         //explosions
-        renderExplosions(deltaTime);//patlamalar
+        updateAndRenderExplosions(deltaTime);//patlamalar
+
 
         batch.end();
     }
@@ -248,7 +258,12 @@ class GameScreen implements Screen {
                 EnemyShip enemyShip = enemyShipListIterator.next();
                 if (enemyShip.intersects(laser.boundingBox)) {
                     //contact with enemy ship
-                    enemyShip.hit(laser);
+                    if (enemyShip.hitandCheckDestroyed(laser)){
+                        enemyShipListIterator.remove();//gemiden kurtuluyoz
+                        explosionList.add(new Explosion(explosionTexture,
+                                new Rectangle(enemyShip.boundingBox),
+                                0.7f));
+                    }
                     LaserLiserIterator.remove();//carpisma oldugu icin laseri kaldiriyoruz
                     break;
                 }
@@ -261,14 +276,29 @@ class GameScreen implements Screen {
             Laser laser = LaserLiserIterator.next();
             if (playerShip.intersects(laser.boundingBox)) {
                 //contact with player ship
-                playerShip.hit(laser);
-                LaserLiserIterator.remove();
+                if(playerShip.hitandCheckDestroyed(laser)){
+                    explosionList.add(new Explosion(explosionTexture,
+                            new Rectangle(playerShip.boundingBox),
+                            1.6f));
+                    playerShip.shield = 10;
+                }
+                    LaserLiserIterator.remove();
             }
         }
     }
 
-    private void renderExplosions(float deltaTime) {
-        
+    private void updateAndRenderExplosions(float deltaTime) {
+        ListIterator<Explosion> explosionListIterator = explosionList.listIterator();
+        while (explosionListIterator.hasNext()){
+            Explosion explosion = explosionListIterator.next();
+            explosion.update(deltaTime);
+            if (explosion.isFinished()){
+                explosionListIterator.remove();
+            }
+            else {
+                explosion.draw(batch);
+            }
+        }
     }
 
     private void renderLasers(float deltaTime) {
