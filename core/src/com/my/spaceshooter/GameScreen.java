@@ -4,18 +4,23 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Locale;
 
 class GameScreen implements Screen {
 
@@ -43,8 +48,8 @@ class GameScreen implements Screen {
 
 
     //world parameters
-    private final int WORLD_WIDTH = 72;
-    private final int WORLD_HEIGHT = 128;
+    private final float WORLD_WIDTH = 72;
+    private final float WORLD_HEIGHT = 128;
     private final float TOUCH_MOVEMENT_THRESHOLD = 5f;
 
     //game objects
@@ -54,6 +59,14 @@ class GameScreen implements Screen {
     private LinkedList<Laser> enemyLaserList;
     private LinkedList<Explosion> explosionList;
         //linkedList neden => kolayca silme islemi icin. Cunku gemiye carpinca kolayca silmememiz gerek
+
+    private int score = 0;
+
+    //Heads-up Display//metinler
+    BitmapFont font;
+    float hudVerticalMargin, hudLeftX, hudRightX, hudCenteX, hudRow1Y, hudRow2Y, hudSectionWidth;
+
+
 
 
 
@@ -105,6 +118,36 @@ class GameScreen implements Screen {
         explosionList = new LinkedList<>();
 
         batch = new SpriteBatch();//goruntuyu olusturur
+
+        prepareHUD();
+    }
+
+    private void prepareHUD() {
+        //create a BitmapFont from our
+
+        FreeTypeFontGenerator fontGenerator = new FreeTypeFontGenerator(Gdx.files.internal("EdgeOfTheGalaxyRegular-OVEa6.otf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter fontParameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+
+        fontParameter.size = 72;
+        fontParameter.borderWidth = 3.6f;
+        fontParameter.color = new Color(1,1,1,0.3f);
+        fontParameter.borderColor = new Color(0,0,0,0.3f);
+
+        font = fontGenerator.generateFont(fontParameter);
+
+        //scale the font to fit world
+        font.getData().setScale(0.08f);
+
+        //calculate hud margins...
+        hudVerticalMargin = font.getCapHeight() / 2;//font.getCapHeight() -> fontun yuksekligi kadar
+        hudLeftX = hudVerticalMargin;
+        hudRightX = WORLD_WIDTH  * 2 / 3 - hudLeftX;
+        hudCenteX = WORLD_WIDTH / 3;
+        hudRow1Y = WORLD_HEIGHT - hudVerticalMargin;
+        hudRow2Y = hudRow1Y - hudVerticalMargin - font.getCapHeight();
+        hudSectionWidth = WORLD_WIDTH / 3;
+
+
     }
 
 
@@ -142,8 +185,23 @@ class GameScreen implements Screen {
         //explosions
         updateAndRenderExplosions(deltaTime);//patlamalar
 
+        //HUD rendering
+        updateAndRenderHUD();
 
         batch.end();
+    }
+
+    private void updateAndRenderHUD() {
+        //render top row labels
+        font.draw(batch,"Score", hudLeftX, hudRow1Y, hudSectionWidth, Align.left,false);//en sola hizaliyor
+        font.draw(batch,"Shield", hudCenteX, hudRow1Y,hudSectionWidth,Align.center,false);
+        font.draw(batch,"Lives", hudRightX, hudRow1Y, hudSectionWidth,Align.right,false);
+
+        //render second row values
+        font.draw(batch, String.format(Locale.getDefault(), "%06d",score), hudLeftX, hudRow2Y, hudSectionWidth, Align.left,false);
+        font.draw(batch, String.format(Locale.getDefault(), "%02d",playerShip.shield), hudCenteX, hudRow2Y,hudSectionWidth,Align.center,false);
+        font.draw(batch, String.format(Locale.getDefault(), "%02d",playerShip.lives), hudRightX, hudRow2Y, hudSectionWidth,Align.right,false);
+
     }
 
     private void moveEnemy(EnemyShip enemyShip,float deltaTime) {
@@ -260,9 +318,11 @@ class GameScreen implements Screen {
                     //contact with enemy ship
                     if (enemyShip.hitandCheckDestroyed(laser)){
                         enemyShipListIterator.remove();//gemiden kurtuluyoz
+
                         explosionList.add(new Explosion(explosionTexture,
                                 new Rectangle(enemyShip.boundingBox),
                                 0.7f));
+                        score +=100;
                     }
                     LaserLiserIterator.remove();//carpisma oldugu icin laseri kaldiriyoruz
                     break;
@@ -281,6 +341,7 @@ class GameScreen implements Screen {
                             new Rectangle(playerShip.boundingBox),
                             1.6f));
                     playerShip.shield = 10;
+                    playerShip.lives--;
                 }
                     LaserLiserIterator.remove();
             }
